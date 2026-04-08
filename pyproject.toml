@@ -1,0 +1,67 @@
+[project]
+name = "docuinsight"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "python-dotenv>=0.21,<2",
+    "openai>=2.0,<3",
+    "streamlit>=1.37,<2",
+    "langgraph>=1.1,<2",
+    "langchain-openai>=1.1,<2",
+    "langchain-core>=1.2,<2",
+    "langchain-community>=0.4,<1",
+    "chromadb>=1.0,<2",
+    "rank-bm25>=0.2,<1",
+    "langdetect>=1.0,<2",
+    "nltk>=3.9,<4",
+    "pypdf>=6.0,<7",
+    "PyMuPDF>=1.24,<2",
+    "python-docx>=1.0,<2",
+    "fpdf2>=2.8,<3",
+]
+
+[project.optional-dependencies]
+ml = [
+    "sentence-transformers>=3.0",
+    "torch>=2.2",
+]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.11",
+    "mypy>=1.10",
+    "langgraph-cli[inmem]",
+]
+
+[tool.ruff]
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W"]
+ignore = [
+    "E402",  # Module-level imports after load_dotenv() / env setup are intentional
+    "E501",  # Line length — LLM prompts are more readable as single lines
+]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_return_any = false
+warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = ["src.app", "src.app_render", "src.app_helpers"]
+ignore_errors = true  # Streamlit's dynamic session_state is inherently untyped
+
+[[tool.mypy.overrides]]
+module = ["src.agent_graph"]
+disable_error_code = ["index", "operator", "return-value", "typeddict-item"]  # LangGraph StateGraph/TypedDict internals
+
+[[tool.mypy.overrides]]
+module = ["src.retriever", "src.ingest", "src.discovery", "src.exporter"]
+ignore_errors = true  # ChromaDB, PyMuPDF, OpenAI have no type stubs — too many false positives
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
