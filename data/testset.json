@@ -1,0 +1,50 @@
+[
+  {
+    "question": "What is Cognitive Behavioural Therapy (CBT) and which techniques does it use for depression?",
+    "reference_truth": "CBT is a structured psychological treatment following Beck's protocol. Key techniques include behavioural activation, cognitive restructuring, thought records, and problem-solving training. Sessions are typically weekly, 50 minutes each.",
+    "must_contain": ["cognitive", "behavioural", "thought record", "activation"],
+    "intent": "SEARCH"
+  },
+  {
+    "question": "How is the PHQ-9 scored and what score indicates moderate depression?",
+    "reference_truth": "The PHQ-9 has 9 items rated 0-3, total range 0-27. Scores of 10-14 indicate moderate depression. A score of 10 or above warrants clinical assessment. Item 9 about self-harm requires immediate assessment regardless of total score.",
+    "must_contain": ["PHQ-9", "moderate", "10"],
+    "intent": "SEARCH"
+  },
+  {
+    "question": "What are the components of CBT-I for treating insomnia?",
+    "reference_truth": "CBT-I includes sleep restriction therapy (initial sleep window ~5.5h, expanded weekly), stimulus control (bed only for sleep), sleep hygiene education (caffeine cutoff, consistent wake time), and cognitive restructuring of dysfunctional beliefs about sleep.",
+    "must_contain": ["sleep restriction", "stimulus control", "sleep hygiene"],
+    "intent": "SEARCH"
+  },
+  {
+    "question": "What data protection rights do patients have under DSGVO when their health data is processed?",
+    "reference_truth": "Patients have the right to access (Art. 15), rectification (Art. 16), erasure (Art. 17), and portability (Art. 20). However, the right to erasure is limited in healthcare due to legal retention periods - clinical notes must be kept for 10 years under paragraph 630f BGB.",
+    "must_contain": ["DSGVO", "access", "erasure", "10 years"],
+    "intent": "SEARCH"
+  },
+  {
+    "question": "Summarise the key findings of the DiGA evaluation for the Mindful Companion app.",
+    "reference_truth": "The fictional RCT (n=240) showed GAD-7 reduction of 5.2 points (intervention) vs 1.1 points (control), p<0.001. PHQ-9 reduced by 4.8 vs 0.9 points. Responder rate 61% vs 18%, NNT 2.3, Cohen's d 0.74. Recommended for permanent DiGA directory inclusion.",
+    "must_contain": ["GAD-7", "PHQ-9", "DiGA", "efficacy"],
+    "intent": "SUMMARIZE"
+  },
+  {
+    "question": "What are the warning signs and action steps in a relapse prevention plan for depression?",
+    "reference_truth": "Early warning signs include irritability, social withdrawal, concentration difficulties, skipping exercise, and excessive social media use. The action plan uses a traffic light system: green (maintain routines), amber (1-2 signs: reinstate thought records, contact GP), red (3+ signs: contact therapist within 48h).",
+    "must_contain": ["warning signs", "relapse", "coping"],
+    "intent": "SEARCH"
+  },
+  {
+    "question": "How does the 7-column thought record work in CBT cognitive restructuring?",
+    "reference_truth": "The 7 columns are: (1) Situation, (2) Automatic thought with belief rating 0-100%, (3) Emotion with intensity rating, (4) Evidence for the thought, (5) Evidence against the thought, (6) Balanced thought with new belief rating, (7) Outcome with re-rated emotion. It helps identify and challenge automatic negative thoughts.",
+    "must_contain": ["automatic thought", "evidence", "balanced", "emotion"],
+    "intent": "SEARCH"
+  },
+  {
+    "question": "Compare the first-line treatments for Generalised Anxiety Disorder: psychological vs pharmacological.",
+    "reference_truth": "Psychological: CBT is first-line (NICE Grade A), minimum 12 sessions, includes worry time, cognitive restructuring, and exposure. Pharmacological: SSRIs (sertraline, escitalopram) or SNRIs (venlafaxine, duloxetine) as first-line medication; pregabalin and buspirone as second-line. Long-term benzodiazepines should be avoided.",
+    "must_contain": ["CBT", "SSRI", "anxiety", "first-line"],
+    "intent": "COMPARE"
+  }
+]

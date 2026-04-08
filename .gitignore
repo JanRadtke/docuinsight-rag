@@ -1,0 +1,60 @@
+# Secrets — never commit!
+.env
+.env.local
+
+# Claude Code
+.claude/
+
+# Python Cache & Build
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Virtual environments
+venv/
+env/
+.anaconda/
+.conda/
+
+# User data (don't commit PDFs)
+input/*.pdf
+
+# Data directory (chroma_db, images, eval artifacts — all generated locally)
+# Note: data/*.md documentation files ARE tracked (see below)
+data/chroma_db/
+data/images/
+# Note: data/testset*.json are tracked intentionally (eval reproducibility)
+
+# Logs and eval artifacts
+*.log
+logs/
+# eval_results/ — kept in repo to show evaluation evidence
+data/*_evaluate.txt
+
+# IDE Settings
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Jupyter & Tests
+.ipynb_checkpoints/
+*.ipynb
+.pytest_cache/
+.coverage
+htmlcov/
+
+# LangGraph Local Dev
+.langgraph_api/
+.worktrees/

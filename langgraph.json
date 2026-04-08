@@ -1,0 +1,11 @@
+{
+  "graphs": {
+    "docuinsight": "./src/agent_graph.py:get_graph"
+  },
+  "dependencies": ["."],
+  "env": ".env",
+  "python_version": "3.11",
+  "environment": {
+    "PYTHONPATH": "./src:$PYTHONPATH"
+  }
+}
