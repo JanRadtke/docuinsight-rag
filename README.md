@@ -90,7 +90,6 @@ flowchart TD
 ```bash
 # 1. Install
 pip install -e .          # editable install — adds src/ to PYTHONPATH
-pip install -e ".[ml]"    # optional: cross-encoder reranking
 
 # 2. Configure provider
 cp .env.example .env
@@ -232,7 +231,7 @@ The healthcare testset uses self-generated clinical documents (created via `scri
 
 | Testset | Domain | Docs | Model | Score |
 |---------|--------|------|-------|-------|
-| Healthcare | Clinical guidelines, therapy protocols | 10 single-page PDFs | gpt-4o-mini | **91.2 / 100** |
+| Healthcare | Clinical guidelines, therapy protocols | 10 single-page PDFs | gpt-4o-mini | **87.5 / 100** |
 | Hallmarks of Aging | Scientific review papers (10–30 pages) | 6 multi-page papers | gpt-4o-mini | **65.7 / 100** |
 
 ### Comparison: BioInsight (Azure) vs DocuInsight (ChromaDB)
@@ -245,11 +244,11 @@ to measure the impact of switching from Azure AI Search to local ChromaDB:
 |------|--------|--------------------------|----------------------|
 | p16INK4a expression rate | SEARCH | 70 | 70 |
 | p16INK4a vs p21 | COMPARE | 70 | 70 |
-| What are senolytics? | SEARCH | **90** | **90** |
-| Li vs Chen study comparison | COMPARE | 70 | 40 |
-| Hallmarks of Aging (Lopez-Otin) | SUMMARIZE | 70 | 60 |
-| Rapamycin side effects | SEARCH | **90** | 70 |
-| Well-defined research field | SEARCH | 60 | 60 |
+| What are senolytics? | SEARCH | **90** | 75 |
+| Li vs Chen study comparison | COMPARE | 70 | 75 |
+| Hallmarks of Aging (Lopez-Otin) | SUMMARIZE | 70 | 70 |
+| Rapamycin side effects | SEARCH | **90** | 60 |
+| Well-defined research field | SEARCH | 60 | 40 |
 | **Average** | | **74.3** | **65.7** |
 
 **Key takeaway:** Azure AI Search's production-grade hybrid retrieval (BM25 with
