@@ -50,8 +50,8 @@ CHAT_MODEL = get_model_name()
 
 def chat_with_data():
     thread_id = str(uuid4())
-    print(f"\n📄 DocuInsight Terminal (model: {CHAT_MODEL})")
-    print(f"💬 Session: {thread_id[:8]}...")
+    print(f"\nDocuInsight Terminal (model: {CHAT_MODEL})")
+    print(f"Session: {thread_id[:8]}...")
     print("----------------------------------------------------")
 
     # Local history for Router intent classification (user perspective).
@@ -65,7 +65,7 @@ def chat_with_data():
 
         is_blocked, block_reason = guardrail.check(question)
         if is_blocked:
-            print(f"\n🛡️ Blocked: {block_reason}")
+            print(f"\nBlocked: {block_reason}")
             continue
 
         intent = router.decide_intent(question, chat_history=history[-4:] or None)
@@ -83,12 +83,12 @@ def chat_with_data():
                         {"role": "user", "content": question}
                     ]
                 )
-                print(f"\n🤖 {response.choices[0].message.content}")
+                print(f"\n{response.choices[0].message.content}")
             except Exception as e:
                 print(f"❌ Error: {e}")
             continue
 
-        print(f"🧠 Intent: {intent}")
+        print(f"Intent: {intent}")
         print("... Agent working ...")
 
         try:
@@ -107,12 +107,12 @@ def chat_with_data():
                 for log in rewrite_logs:
                     print(log)
 
-                print(f"🤖 ANSWER:\n{result['final_answer']}")
+                print(f"ANSWER:\n{result['final_answer']}")
                 print("-" * 60)
 
                 refs = result.get("references", [])
                 if refs:
-                    print("📚 Sources:")
+                    print("Sources:")
                     for ref in refs[:5]:
                         print(f"- {ref['file']} (p. {ref['page']})")
             else:

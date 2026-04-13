@@ -49,21 +49,21 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
     # --- 2. HEADER ---
     st.markdown("---")
     if dev_mode:
-        header = "### 🛠️ Deep Dive Logs"
+        header = "### Deep Dive Logs"
         if len(rounds) > 1:
-            header += f" — ⚠️ {len(rounds)} Iterations"
+            header += f" — {len(rounds)} Iterations"
         st.markdown(header)
     else:
-        st.markdown("### 🧠 Thought Process")
+        st.markdown("### Thought Process")
 
     # --- 3. TABS FOR ATTEMPTS (if Retries) ---
     if len(rounds) > 1:
         tab_labels = []
         for i in range(len(rounds)):
             if i < len(rounds) - 1:
-                tab_labels.append(f"⚠️ Attempt {i+1} (discarded)")
+                tab_labels.append(f"Attempt {i+1} (discarded)")
             else:
-                tab_labels.append(f"✅ Attempt {i+1} (final)")
+                tab_labels.append(f"Attempt {i+1} (final)")
         tabs = st.tabs(tab_labels)
     else:
         tabs = [st.container()]
@@ -85,17 +85,17 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
             writer_logs = [entry for entry in round_logs if "WRITER" in entry]
 
             if planner_logs and round_idx == 0:
-                with st.expander("🗺️ **Strategy** (Planner)", expanded=expand_default):
+                with st.expander("**Strategy** (Planner)", expanded=expand_default):
                     for entry in planner_logs:
                         if "PLANNER:" in entry:
-                            st.info(entry.replace("🧠 PLANNER: ", ""))
+                            st.info(entry.replace("PLANNER: ", ""))
                         elif "QUESTION:" in entry:
                             st.caption(entry)
 
             if original_logs or optimized_logs or found_logs:
-                with st.expander("🔍 **Research**", expanded=expand_default):
+                with st.expander("**Research**", expanded=expand_default):
                     if original_logs:
-                        st.markdown("**📝 Original Query:**")
+                        st.markdown("**Original Query:**")
                         seen = set()
                         for entry in original_logs:
                             content = entry.split(': ', 1)[1] if ': ' in entry else entry
@@ -104,19 +104,19 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
                                 seen.add(content)
 
                     if optimized_logs:
-                        st.markdown("**🔄 Optimised Queries:**")
+                        st.markdown("**Optimised Queries:**")
                         for entry in optimized_logs:
                             if "FACTS_QUERY" in entry:
                                 match = re.search(r"FACTS_QUERY: '([^']+)'", entry)
                                 if match:
-                                    st.code(f"📚 Facts: {match.group(1)}", language=None)
+                                    st.code(f"Facts: {match.group(1)}", language=None)
                             elif "CONCEPTS_QUERY" in entry:
                                 match = re.search(r"CONCEPTS_QUERY: '([^']+)'", entry)
                                 if match:
-                                    st.code(f"🔬 Concepts: {match.group(1)}", language=None)
+                                    st.code(f"Concepts: {match.group(1)}", language=None)
 
                     if found_logs:
-                        st.markdown("**📚 Results:**")
+                        st.markdown("**Results:**")
                         seen = set()
                         for entry in found_logs:
                             if entry not in seen:
@@ -126,14 +126,14 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
                     if chunk_logs:
                         for entry in chunk_logs:
                             if "FACTS_CHUNKS" in entry:
-                                raw = entry.replace("📚 FACTS_CHUNKS: ", "")
+                                raw = entry.replace("FACTS_CHUNKS: ", "")
                                 st.code("Facts:\n" + raw.replace("  ", "\n"), language=None)
                             elif "CONCEPTS_CHUNKS" in entry:
-                                raw = entry.replace("🔬 CONCEPTS_CHUNKS: ", "")
+                                raw = entry.replace("CONCEPTS_CHUNKS: ", "")
                                 st.code("Concepts:\n" + raw.replace("  ", "\n"), language=None)
 
             if agg_logs:
-                with st.expander("🔄 **Synthesis**", expanded=expand_default):
+                with st.expander("**Synthesis**", expanded=expand_default):
                     seen = set()
                     for entry in agg_logs:
                         if entry in seen:
@@ -156,12 +156,12 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
                 is_retry = any("Retry" in entry for entry in quality_logs)
                 is_best_effort = any("Best Effort" in entry for entry in quality_logs)
 
-                icon = "✅" if local_score >= 0.6 else "⚠️"
+                icon = "✅" if local_score >= 0.6 else "⚠️"  # semantic status icons
                 title = f"{icon} **Relevance Check** (Score: {local_score:.2f})"
                 if is_retry:
-                    title += " → ❌ Retry required"
+                    title += " — Retry required"
                 elif is_best_effort:
-                    title += " → ⚠️ Best Effort"
+                    title += " — Best Effort"
 
                 with st.expander(title, expanded=True):
                     for entry in quality_logs:
@@ -181,10 +181,10 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
                                 st.success(entry)
 
             if reader_logs and is_final_round:
-                with st.expander(f"🕵️ **Extraction** ({len(facts)} facts)", expanded=expand_default):
+                with st.expander(f"**Extraction** ({len(facts)} facts)", expanded=expand_default):
                     for entry in reader_logs:
                         if "FACTS_PREVIEW" in entry:
-                            lines = entry.replace("📊 FACTS_PREVIEW:\n", "").split("\n")
+                            lines = entry.replace("FACTS_PREVIEW:\n", "").split("\n")
                             for line in lines:
                                 if line.strip():
                                     st.caption(line.strip())
@@ -192,10 +192,10 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
                             st.text(entry)
 
             if writer_logs and is_final_round:
-                with st.expander("✍️ **Drafting**", expanded=expand_default):
+                with st.expander("**Drafting**", expanded=expand_default):
                     for entry in writer_logs:
                         if "WRITER_SEES:" in entry:
-                            lines = entry.replace("📋 WRITER_SEES:\n", "").split("\n")
+                            lines = entry.replace("WRITER_SEES:\n", "").split("\n")
                             for line in lines:
                                 if line.strip():
                                     st.caption(line.strip())
@@ -205,7 +205,7 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
     # --- 4b. RENUMBERING NOTE (dev mode only) ---
     if dev_mode and _renumber:
         mapping_str = "  ".join(f"[{old}] → [{new}]" for old, new in sorted(_renumber.items()))
-        with st.expander("🔢 **Source Renumbering** (Display only)", expanded=False):
+        with st.expander("**Source Renumbering** (Display only)", expanded=False):
             st.caption(
                 "The internal chunk IDs (assigned during retrieval) are renumbered for display. "
                 "Logs above show original IDs, the answer and source list use display IDs."
@@ -216,7 +216,7 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
 
     # --- 5. WARNING ON LOW SCORE ---
     if quality_score < 0.6:
-        st.error(f"⚠️ **Note:** Retrieved information may not be specific enough (Score: {quality_score:.2f}). The following answer is provided on a 'Best Effort' basis.")
+        st.error(f"Retrieved information may not be specific enough (Score: {quality_score:.2f}). The following answer is provided on a 'Best Effort' basis.")
 
     # --- 6. FINAL ANSWER ---
     st.markdown(final_answer_display)
@@ -241,7 +241,7 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
         # Assign sequential display IDs to all filtered refs
         unique_refs = [dict(r, display_id=i) for i, r in enumerate(unique_refs, start=1)]
 
-        st.markdown(f"<br><hr><h4>📚 Verified Evidence ({len(unique_refs)} sources):</h4>", unsafe_allow_html=True)
+        st.markdown(f"<br><hr><h4>Verified Evidence ({len(unique_refs)} sources):</h4>", unsafe_allow_html=True)
 
         for r in unique_refs:
             clean_file = clean_filename(r['file'])
@@ -249,21 +249,22 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
             full_text = r.get('text', '')
             text_length = len(full_text)
 
-            ref_icon = "🖼️" if r.get('type') == 'image' else "📄"
-            with st.expander(f"**{marker} {ref_icon} {clean_file} (P. {r['page']})** ({text_length} chars)", expanded=False):
+            type_label = "[IMG]" if r.get('type') == 'image' else ""
+            with st.expander(f"**{marker} {type_label} {clean_file} (P. {r['page']})** ({text_length} chars)", expanded=False):
                 if r.get('type') == 'image':
                     if r.get('image_path') and os.path.exists(r['image_path']):
                         st.image(r['image_path'])
                     st.caption(f"**AI Analysis:** {full_text}")
                 else:
-                    st.markdown("**📖 Full Context:**")
+                    st.markdown("**Full Context:**")
                     st.text_area("Context", value=full_text, height=150, disabled=True, key=f"ta_{msg_id}_{r['display_id']}", label_visibility="collapsed")
 
                 c1, c2 = st.columns(2)
                 with c1:
-                    txt_data = f"=== SOURCE [{r['display_id']}] ===\nFile: {r['file']}\nPage: {r['page']}\n\n{full_text}"
+                    clean_text = re.sub(r'[^\S\n]{2,}', ' ', full_text)
+                    txt_data = f"=== SOURCE [{r['display_id']}] ===\nFile: {r['file']}\nPage: {r['page']}\n\n{clean_text}"
                     st.download_button(
-                        "📄 Download TXT",
+                        "Download TXT",
                         data=txt_data,
                         file_name=f"Source_{r['display_id']}_{clean_file}_P{r['page']}.txt",
                         mime="text/plain",
@@ -275,7 +276,7 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
                     if os.path.exists(file_path):
                         with open(file_path, "rb") as f:
                             st.download_button(
-                                "📕 Download PDF",
+                                "Download PDF",
                                 data=f.read(),
                                 file_name=r['file'],
                                 mime="application/pdf",
@@ -306,12 +307,12 @@ Type: {r.get('type', 'text')}
 Chars: {len(r.get('text', ''))}
 {'='*50}
 
-{r.get('text', '[No Text]')}
+{re.sub(r'[^\S\n]{2,}', ' ', r.get('text', '[No Text]'))}
 
 """
 
         st.download_button(
-            f"📦 Download All Sources as TXT ({len(unique_refs)} sources)",
+            f"Download All Sources as TXT ({len(unique_refs)} sources)",
             data=all_sources_txt,
             file_name=f"All_Sources_{msg_id}.txt",
             mime="text/plain",
@@ -330,7 +331,7 @@ def render_evidence_list(refs: list, response: str, key_prefix: str) -> None:
     if not refs:
         return
 
-    st.markdown("<br><hr><h4 style='margin-bottom:10px;'>📚 Verified Evidence:</h4>", unsafe_allow_html=True)
+    st.markdown("<br><hr><h4 style='margin-bottom:10px;'>Verified Evidence:</h4>", unsafe_allow_html=True)
 
     displayed_refs = [r for r in refs if f"[{r['id']}]" in response]
     if not displayed_refs:
@@ -339,18 +340,19 @@ def render_evidence_list(refs: list, response: str, key_prefix: str) -> None:
     for r in displayed_refs:
         clean_file = clean_filename(r['file'])
         marker = f"[{r['id']}]"
-        title = f"**{marker} 📄 {clean_file} (P. {r['page']})**"
+        title = f"**{marker} {clean_file} (P. {r['page']})**"
 
         with st.expander(title, expanded=False):
             full_text = r.get('text', '')
-            st.markdown("**📖 Full Context:**")
+            st.markdown("**Full Context:**")
             st.text_area("Context", value=full_text, height=150, disabled=True, key=f"ta_{key_prefix}_{r['id']}", label_visibility="collapsed")
 
             c1, c2 = st.columns(2)
             with c1:
-                txt_data = f"=== SOURCE [{r['id']}] ===\nFile: {r['file']}\nPage: {r['page']}\n\n{full_text}"
+                clean_text = re.sub(r'[^\S\n]{2,}', ' ', full_text)
+                txt_data = f"=== SOURCE [{r['id']}] ===\nFile: {r['file']}\nPage: {r['page']}\n\n{clean_text}"
                 st.download_button(
-                    "📄 Download TXT",
+                    "Download TXT",
                     data=txt_data,
                     file_name=f"Source_{r['id']}_{clean_file}_P{r['page']}.txt",
                     mime="text/plain",
@@ -362,10 +364,25 @@ def render_evidence_list(refs: list, response: str, key_prefix: str) -> None:
                 if os.path.exists(file_path):
                     with open(file_path, "rb") as f:
                         st.download_button(
-                            "📕 Download PDF",
+                            "Download PDF",
                             data=f.read(),
                             file_name=r['file'],
                             mime="application/pdf",
                             key=f"dl_pdf_{key_prefix}_{r['id']}",
                             use_container_width=True
                         )
+
+    # --- ALL SOURCES AS ONE FILE ---
+    st.markdown("---")
+    all_sources_txt = f"DOCUINSIGHT - ALL SOURCES\nTotal sources: {len(displayed_refs)}\n{'='*50}\n\n"
+    for r in displayed_refs:
+        all_sources_txt += f"{'='*50}\nSOURCE [{r['id']}]\nFile: {r['file']}\nPage: {r['page']}\n{'='*50}\n\n{re.sub(r'[^\S\n]{2,}', ' ', r.get('text', '[No Text]'))}\n\n"
+
+    st.download_button(
+        f"Download All Sources as TXT ({len(displayed_refs)} sources)",
+        data=all_sources_txt,
+        file_name=f"All_Sources_{key_prefix}.txt",
+        mime="text/plain",
+        key=f"dl_all_{key_prefix}",
+        use_container_width=True
+    )

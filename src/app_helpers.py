@@ -21,7 +21,7 @@ def refresh_sidebar_metrics() -> None:
     if 'token_display' in st.session_state:
         s = st.session_state.stats
         st.session_state.token_display.caption(
-            f"📊 In: **{s['total_input_tokens']:,}** · Out: **{s['total_output_tokens']:,}** · Cost: **${s['total_cost']:.4f}**"
+            f"In: **{s['total_input_tokens']:,}** · Out: **{s['total_output_tokens']:,}** · Cost: **${s['total_cost']:.4f}**"
         )
 
 

@@ -72,13 +72,13 @@ class DiscoveryEngine:
             return {"error": "No PDFs found in input/ folder."}
 
         if progress_callback:
-            progress_callback(f"🔍 Batch Discovery started: {len(file_list)} documents found.")
+            progress_callback(f"Batch Discovery started: {len(file_list)} documents found.")
 
         # PHASE 1: Batch Summarization
         summaries = []
         for i, filename in enumerate(file_list):
             if progress_callback:
-                progress_callback(f"📄 [{i+1}/{len(file_list)}] Analysing: {filename[:40]}...")
+                progress_callback(f"[{i+1}/{len(file_list)}] Analysing: {filename[:40]}...")
 
             try:
                 context, refs = self.retriever.get_document_summary(filename, max_pages=max_pages_per_doc)
@@ -86,7 +86,7 @@ class DiscoveryEngine:
                 if not context.strip():
                     summaries.append({
                         "file": filename,
-                        "summary": "⚠️ No text extractable.",
+                        "summary": "No text extractable.",
                         "status": "error"
                     })
                     continue
@@ -113,14 +113,14 @@ class DiscoveryEngine:
 
         # PHASE 2: Meta-analysis (Trends & Insights)
         if progress_callback:
-            progress_callback("🧠 Phase 2: Generating meta-analysis (trends & insights)...")
+            progress_callback("Phase 2: Generating meta-analysis (trends & insights)...")
 
         successful_summaries = [s for s in summaries if s['status'] == 'success']
 
         if len(successful_summaries) < 2:
             return {
                 "summaries": summaries,
-                "trends": "⚠️ Too few successful analyses for trend detection.",
+                "trends": "Too few successful analyses for trend detection.",
                 "insights": None,
                 "timestamp": datetime.now().isoformat()
             }
@@ -129,7 +129,7 @@ class DiscoveryEngine:
         insights = self._generate_insights(successful_summaries)
 
         if progress_callback:
-            progress_callback("🎉 Batch Discovery complete!")
+            progress_callback("Batch Discovery complete!")
 
         return {
             "summaries": summaries,
@@ -172,7 +172,7 @@ class DiscoveryEngine:
     def _generate_trend_report(self, summaries: list[dict]) -> str:
         """Meta-analysis: What are the trends across this batch of documents?"""
         combined_text = "\n\n".join([
-            f"📄 **{s['file']}:**\n{s['summary']}"
+            f"**{s['file']}:**\n{s['summary']}"
             for s in summaries
         ])
 
@@ -182,16 +182,16 @@ class DiscoveryEngine:
 
         IDENTIFY:
 
-        ### 🔥 Overarching Themes
+        ### Overarching Themes
         What topics do multiple documents cover? Which themes recur?
 
-        ### 🧵 Common Patterns
+        ### Common Patterns
         Which methods, terms, or concepts appear across documents?
 
-        ### 💎 Notable Findings
+        ### Notable Findings
         Is there a divergent perspective or surprising result?
 
-        ### ⚔️ Potential Contradictions
+        ### Potential Contradictions
         Where might documents contradict each other?
 
         FORMAT: Markdown with emojis. Concise and actionable.
@@ -225,7 +225,7 @@ class DiscoveryEngine:
         3. Be creative but plausible.
 
         FORMAT:
-        ### 💡 Insight 1: [Title]
+        ### Insight 1: [Title]
         **Based on:** Document A + Document B
         **Connection:** "If X, then Y could..."
         **Recommendation:** [Suggestion for further analysis]
@@ -249,15 +249,15 @@ class DiscoveryEngine:
         """Exports Batch Discovery results as a Markdown report."""
 
         if not results:
-            return "# Batch Discovery Report\n\n⚠️ No results available."
+            return "# Batch Discovery Report\n\nNo results available."
 
-        report = f"""# 🔍 DocuInsight Batch Discovery Report
+        report = f"""# DocuInsight Batch Discovery Report
 **Generated:** {results.get('timestamp', 'N/A')}
 **Documents analysed:** {results.get('stats', {}).get('total_docs', 'N/A')}
 
 ---
 
-## 📚 Individual Summaries
+## Individual Summaries
 
 """
         for s in results.get('summaries', []):
@@ -266,13 +266,13 @@ class DiscoveryEngine:
 
         report += f"""---
 
-## 🔥 Trend Analysis
+## Trend Analysis
 
 {results.get('trends', 'No trends identified.')}
 
 ---
 
-## 💡 Insights & Connections
+## Insights & Connections
 
 {results.get('insights', 'No insights generated.')}
 
@@ -285,7 +285,7 @@ class DiscoveryEngine:
 
 # --- CLI usage (for testing without Streamlit) ---
 if __name__ == "__main__":
-    print("🔍 DocuInsight Batch Discovery - Standalone Mode")
+    print("DocuInsight Batch Discovery - Standalone Mode")
     print("=" * 50)
 
     try:

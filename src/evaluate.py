@@ -100,18 +100,18 @@ def run_single_test(i: int, case: dict, client: object, retriever: object, agent
     status_icon = "✅" if score >= 80 else "⚠️" if score >= 50 else "❌"
 
     logs.append(f"\n{'='*80}")
-    logs.append(f"🧪 Test {i}: {case['question'][:60]}...")
+    logs.append(f"Test {i}: {case['question'][:60]}...")
     logs.append(f"{'='*80}")
 
     if agent_logs:
-        logs.append("--- 🤖 AGENT LOGS (excerpt) ---")
+        logs.append("--- AGENT LOGS (excerpt) ---")
         for log_line in agent_logs:
             if "PLANNER" in log_line or "ACTION" in log_line or "Score" in log_line or "Synthesiz" in log_line:
                 logs.append(log_line)
 
-    logs.append(f"\n👉 RESULT: {status_icon} Score: {score}/100 | Time: {duration:.1f}s")
+    logs.append(f"\nRESULT: {status_icon} Score: {score}/100 | Time: {duration:.1f}s")
     if score < 100:
-        logs.append(f"📉 CRITIQUE: {eval_result.get('reasoning')}")
+        logs.append(f"CRITIQUE: {eval_result.get('reasoning')}")
     logs.append("-" * 80)
 
     return {
@@ -131,7 +131,7 @@ def run_evaluation(testset_path: str | None = None) -> None:
     with open(testset_path, "r", encoding="utf-8") as f:
         test_cases = json.load(f)
 
-    print(f"\n🚀 Starting evaluation: {len(test_cases)} cases ({MAX_WORKERS} workers)...")
+    print(f"\nStarting evaluation: {len(test_cases)} cases ({MAX_WORKERS} workers)...")
     print("   (Agent logs are silenced and printed per case at the end)\n")
 
     results = []
@@ -188,12 +188,12 @@ def run_evaluation(testset_path: str | None = None) -> None:
              file.write(f"\n{'-'*80}\n\n")
 
         file.write(f"\n{'#'*60}\n")
-        file.write(f"📊 OVERALL SCORE: {avg:.1f}/100 (completed in {duration_global:.1f}s)\n")
+        file.write(f"OVERALL SCORE: {avg:.1f}/100 (completed in {duration_global:.1f}s)\n")
         file.write(f"{'#'*60}\n")
 
     print(f"\n{'#'*60}")
-    print(f"📊 OVERALL SCORE: {avg:.1f}/100 (completed in {duration_global:.1f}s)")
-    print(f"📄 Detailed report saved to: {log_filepath}")
+    print(f"OVERALL SCORE: {avg:.1f}/100 (completed in {duration_global:.1f}s)")
+    print(f"Detailed report saved to: {log_filepath}")
     print(f"{'#'*60}")
 
 if __name__ == "__main__":

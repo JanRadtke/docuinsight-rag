@@ -54,6 +54,15 @@ def _get_memory_saver() -> MemorySaver:
 # STATE DEFINITION - The agent's "memory"
 # ============================================================================
 
+def _keep_last(existing: Optional[str], new: Optional[str]) -> Optional[str]:
+    """Reducer for error_message: keeps the latest non-None value.
+
+    Required because parallel retrieval nodes (facts + concepts) may both
+    write to error_message in the same step.
+    """
+    return new if new is not None else existing
+
+
 class AgentState(TypedDict):
     """
     State flows through the entire graph.
@@ -87,7 +96,7 @@ class AgentState(TypedDict):
     retry_count: int
     needs_recursion: bool
     new_query: Optional[str]
-    error_message: Optional[str]
+    error_message: Annotated[Optional[str], _keep_last]
     entity_match: bool  # True if COMPARE matched docs by entity name
     entities: Optional[List[str]]  # Extracted entity names (COMPARE intent)
     english_question: Optional[str]  # English translation for cross-lingual extraction
@@ -141,7 +150,7 @@ def node_aggregator(state: AgentState) -> Dict[str, Any]:
     all_refs_deduped.sort(key=lambda x: x.get("id", 0))
 
 
-    log_summary = f"🔄 AGGREGATOR: {len(all_refs_deduped)} unique chunks from {len(unique_sources)} files — {len(all_context)} chars total"
+    log_summary = f"AGGREGATOR: {len(all_refs_deduped)} unique chunks from {len(unique_sources)} files — {len(all_context)} chars total"
     chunk_detail = "  ".join(
         f"[{r['id']}] {r.get('file','?').replace('.pdf','')[:20]} S.{r.get('page','?')}"
         for r in all_refs_deduped
@@ -167,7 +176,7 @@ def node_quality_check(state: AgentState) -> Dict[str, Any]:
 
     # Fast-path: Entity Match already validated document relevance — skip quality gate
     if state.get("entity_match"):
-        log = f"✅ QUALITY_CHECK: Entity Match confirmed — skipping LLM quality gate ({len(context)} chars)"
+        log = f"QUALITY_CHECK: Entity Match confirmed — skipping LLM quality gate ({len(context)} chars)"
         logger.info(log)
         return {
             "quality_score": 0.8,
@@ -176,7 +185,7 @@ def node_quality_check(state: AgentState) -> Dict[str, Any]:
         }
 
     if not context or len(context) < 100:
-        log = f"⚠️ QUALITY_CHECK: No context found ({len(context)} chars). Triggering retry."
+        log = f"QUALITY_CHECK: No context found ({len(context)} chars). Triggering retry."
         logger.info(log)
         return {
             "quality_score": 0.0,
@@ -272,10 +281,10 @@ IMPORTANT: Return ONLY the new query (no explanation, no quotes)."""
             logger.info("Smart Query Refinement Error: %s", e)
             smart_query = f"{question} specific detailed"
 
-        log_score = f"⚠️ QUALITY_CHECK: Score {quality:.2f}/1.0"
-        log_reason = f"📋 REASON: {reason}"
-        log_action = f"🔄 ACTION: Smart Retry {retry_count + 1}/{max_retries}"
-        log_new_query = f"🎯 NEW QUERY: '{smart_query}'"
+        log_score = f"QUALITY_CHECK: Score {quality:.2f}/1.0"
+        log_reason = f"REASON: {reason}"
+        log_action = f"ACTION: Smart Retry {retry_count + 1}/{max_retries}"
+        log_new_query = f"NEW QUERY: '{smart_query}'"
 
         logger.info(log_score)
         logger.info(log_reason)
@@ -292,9 +301,9 @@ IMPORTANT: Return ONLY the new query (no explanation, no quotes)."""
 
     # Case B: Poor but NO retries left -> BEST EFFORT
     elif quality < 0.6 and retry_count >= max_retries:
-        log_score = f"⚠️ QUALITY_CHECK: Score {quality:.2f}/1.0 (after {retry_count} retries)"
-        log_reason = f"📋 REASON: {reason}"
-        log_action = "❗ ACTION: Max retries reached → 'Best Effort' mode"
+        log_score = f"QUALITY_CHECK: Score {quality:.2f}/1.0 (after {retry_count} retries)"
+        log_reason = f"REASON: {reason}"
+        log_action = "ACTION: Max retries reached → 'Best Effort' mode"
 
         logger.info(log_score)
         logger.info(log_reason)
@@ -309,9 +318,9 @@ IMPORTANT: Return ONLY the new query (no explanation, no quotes)."""
 
     # Case C: Good -> CONTINUE
     else:
-        log_score = f"✅ QUALITY_CHECK: Score {quality:.2f}/1.0"
-        log_reason = f"📋 REASON: {reason}"
-        log_action = "✅ ACTION: Proceeding to Reader"
+        log_score = f"QUALITY_CHECK: Score {quality:.2f}/1.0"
+        log_reason = f"REASON: {reason}"
+        log_action = "ACTION: Proceeding to Reader"
 
         logger.info(log_score)
         logger.info(log_reason)
@@ -328,7 +337,7 @@ def node_error_handler(state: AgentState) -> Dict[str, Any]:
     """ERROR NODE - Fallback for errors or missing information."""
     error_msg = state.get("error_message", "No relevant information found.")
 
-    log = f"❌ ERROR_HANDLER: Fallback activated. Reason: {error_msg}"
+    log = f"ERROR_HANDLER: Fallback activated. Reason: {error_msg}"
     logger.info(log)
 
     return {
@@ -373,8 +382,8 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
             "COMPARE": "Comparison request. Multi-document retrieval + Criteria Scout.",
         }
         reason = strategy_reasons.get(intent, f"Standard strategy for intent '{intent}'.")
-        log_strategy = f"🧠 PLANNER: Intent='{intent}' → {reason}"
-        log_question = f"📝 QUESTION: '{question[:80]}...'" if len(question) > 80 else f"📝 QUESTION: '{question}'"
+        log_strategy = f"PLANNER: Intent='{intent}' → {reason}"
+        log_question = f"QUESTION: '{question[:80]}...'" if len(question) > 80 else f"QUESTION: '{question}'"
         logger.info(log_strategy)
         logger.info(log_question)
 
@@ -388,7 +397,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
         # --- Cross-lingual: get corpus languages ---
         doc_languages = retriever.get_document_languages()
 
-        log_lang = f"🌐 LANG: user={user_language}, docs={doc_languages}"
+        log_lang = f"LANG: user={user_language}, docs={doc_languages}"
         logger.info(log_lang)
 
         # --- Conversational memory: query rewriting ---
@@ -399,7 +408,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
         if chat_history and intent in ("SEARCH", "COMPARE", "SUMMARIZE"):
             rewritten = agent.rewrite_follow_up(question, chat_history)
             if rewritten != question:
-                log_rewrite = f"🔄 REWRITE: '{question}' → '{rewritten}'"
+                log_rewrite = f"REWRITE: '{question}' → '{rewritten}'"
                 logger.info(log_rewrite)
                 rewritten_question = rewritten
 
@@ -433,15 +442,15 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
         doc_languages = state.get("doc_languages") or ["en"]
 
         if is_retry:
-            log_original = f"🔄 FACTS_RETRY: '{base_query}'"
+            log_original = f"FACTS_RETRY: '{base_query}'"
         else:
-            log_original = f"📝 FACTS_ORIGINAL: '{base_query}'"
+            log_original = f"FACTS_ORIGINAL: '{base_query}'"
         logger.info(log_original)
 
         # --- Multilingual path ---
         if len(doc_languages) > 1:
             multilingual_queries = agent.expand_query_multilingual(base_query, doc_languages, intent="FACTS")
-            log_multi = f"🌐 FACTS_MULTILINGUAL: {list(multilingual_queries.keys())} — {multilingual_queries}"
+            log_multi = f"FACTS_MULTILINGUAL: {list(multilingual_queries.keys())} — {multilingual_queries}"
             logger.info(log_multi)
             try:
                 context, refs, citation_map = retriever.retrieve_knowledge(
@@ -449,9 +458,9 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 )
                 unique_files = list(set([r.get('file', 'Unknown') for r in refs]))
                 file_list = ", ".join([f.replace('.pdf', '')[:25] for f in unique_files[:5]])
-                log_hits = f"📚 FACTS_FOUND: {len(refs)} hits from {len(unique_files)} files: [{file_list}]"
+                log_hits = f"FACTS_FOUND: {len(refs)} hits from {len(unique_files)} files: [{file_list}]"
                 chunk_detail = "  ".join(f"[{r['id']}] {r.get('file','?').replace('.pdf','')[:20]} S.{r.get('page','?')}" for r in refs)
-                log_chunks = f"📚 FACTS_CHUNKS: {chunk_detail}"
+                log_chunks = f"FACTS_CHUNKS: {chunk_detail}"
                 logger.info(log_hits)
                 return {
                     "documents": [{"type": "facts", "content": context, "references": refs, "citation_map": citation_map}],
@@ -459,7 +468,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                     "logs": [log_original, log_multi, log_hits, log_chunks]
                 }
             except Exception as e:
-                log = f"❌ SEARCH_FACTS (multilingual): Error - {str(e)}"
+                log = f"SEARCH_FACTS (multilingual): Error - {str(e)}"
                 logger.info(log)
                 return {"documents": [], "error_message": f"Facts search error: {str(e)}", "logs": [log_original, log_multi, log]}
 
@@ -467,7 +476,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
         optimized = agent.optimize_query(base_query, intent="FACTS")
         search_query = optimized["query"]
         optimization_reason = optimized["reasoning"]
-        log_optimized = f"🔍 FACTS_QUERY: '{search_query}' ({optimization_reason})"
+        log_optimized = f"FACTS_QUERY: '{search_query}' ({optimization_reason})"
         logger.info(log_optimized)
 
         try:
@@ -475,9 +484,9 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
 
             unique_files = list(set([r.get('file', 'Unknown') for r in refs]))
             file_list = ", ".join([f.replace('.pdf', '')[:25] for f in unique_files[:5]])
-            log_hits = f"📚 FACTS_FOUND: {len(refs)} hits from {len(unique_files)} files: [{file_list}]"
+            log_hits = f"FACTS_FOUND: {len(refs)} hits from {len(unique_files)} files: [{file_list}]"
             chunk_detail = "  ".join(f"[{r['id']}] {r.get('file','?').replace('.pdf','')[:20]} S.{r.get('page','?')}" for r in refs)
-            log_chunks = f"📚 FACTS_CHUNKS: {chunk_detail}"
+            log_chunks = f"FACTS_CHUNKS: {chunk_detail}"
             logger.info(log_hits)
 
             return {
@@ -490,7 +499,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 "logs": [log_original, log_optimized, log_hits, log_chunks]
             }
         except Exception as e:
-            log = f"❌ SEARCH_FACTS: Error - {str(e)}"
+            log = f"SEARCH_FACTS: Error - {str(e)}"
             logger.info(log)
             return {
                 "documents": [],
@@ -530,7 +539,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 matches = retriever.match_documents_by_entities(entities, intro_pages=2)
                 matched_files = [filename for filename, _ in matches]
                 match_detail = [(f[:30], ents) for f, ents in matches]
-                log_matches = f"📄 COMPARE_MATCHED: {match_detail}"
+                log_matches = f"COMPARE_MATCHED: {match_detail}"
                 logger.info(log_matches)
                 logs.append(log_matches)
 
@@ -539,7 +548,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 context, refs, citation_map = retriever.retrieve_multiple_documents(
                     matched_files[:3], total_token_budget=100000, strategy="balanced"
                 )
-                log_loaded = f"📚 COMPARE_LOADED: {len(refs)} pages from {len(matched_files)} documents"
+                log_loaded = f"COMPARE_LOADED: {len(refs)} pages from {len(matched_files)} documents"
                 logger.info(log_loaded)
                 logs.append(log_loaded)
 
@@ -555,7 +564,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                     "logs": logs
                 }
             else:
-                log_fallback = f"⚠️ COMPARE_FALLBACK: <2 docs matched ({len(matched_files)}), using vector search"
+                log_fallback = f"COMPARE_FALLBACK: <2 docs matched ({len(matched_files)}), using vector search"
                 logger.info(log_fallback)
                 logs.append(log_fallback)
                 # Fall through to standard vector search below
@@ -564,9 +573,9 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
         base_query = state.get("new_query") or state["question"]
 
         if is_retry:
-            log_original = f"🔄 CONCEPTS_RETRY: '{base_query}'"
+            log_original = f"CONCEPTS_RETRY: '{base_query}'"
         else:
-            log_original = f"📝 CONCEPTS_ORIGINAL: '{base_query}'"
+            log_original = f"CONCEPTS_ORIGINAL: '{base_query}'"
         logger.info(log_original)
 
         extra_logs = logs if intent == "COMPARE" else []
@@ -574,7 +583,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
         # --- Multilingual path (skip for COMPARE — entity matching handles doc selection) ---
         if len(doc_languages) > 1 and intent != "COMPARE":
             multilingual_queries = agent.expand_query_multilingual(base_query, doc_languages, intent="CONCEPTS")
-            log_multi = f"🌐 CONCEPTS_MULTILINGUAL: {list(multilingual_queries.keys())}"
+            log_multi = f"CONCEPTS_MULTILINGUAL: {list(multilingual_queries.keys())}"
             logger.info(log_multi)
             try:
                 context, refs, citation_map = retriever.retrieve_knowledge(
@@ -582,16 +591,16 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 )
                 unique_files = list(set([r.get('file', 'Unknown') for r in refs]))
                 file_list = ", ".join([f.replace('.pdf', '')[:25] for f in unique_files[:5]])
-                log_hits = f"🔬 CONCEPTS_FOUND: {len(refs)} hits from {len(unique_files)} files: [{file_list}]"
+                log_hits = f"CONCEPTS_FOUND: {len(refs)} hits from {len(unique_files)} files: [{file_list}]"
                 chunk_detail = "  ".join(f"[{r['id']}] {r.get('file','?').replace('.pdf','')[:20]} S.{r.get('page','?')}" for r in refs)
-                log_chunks = f"🔬 CONCEPTS_CHUNKS: {chunk_detail}"
+                log_chunks = f"CONCEPTS_CHUNKS: {chunk_detail}"
                 logger.info(log_hits)
                 return {
                     "documents": [{"type": "concepts", "content": context, "references": refs, "citation_map": citation_map}],
                     "logs": extra_logs + [log_original, log_multi, log_hits, log_chunks]
                 }
             except Exception as e:
-                log = f"❌ SEARCH_CONCEPTS (multilingual): Error - {str(e)}"
+                log = f"SEARCH_CONCEPTS (multilingual): Error - {str(e)}"
                 logger.info(log)
                 return {"documents": [], "error_message": f"Concepts search error: {str(e)}", "logs": extra_logs + [log_original, log_multi, log]}
 
@@ -599,7 +608,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
         optimized = agent.optimize_query(base_query, intent="CONCEPTS")
         search_query = optimized["query"]
         optimization_reason = optimized["reasoning"]
-        log_optimized = f"🔍 CONCEPTS_QUERY: '{search_query}' ({optimization_reason})"
+        log_optimized = f"CONCEPTS_QUERY: '{search_query}' ({optimization_reason})"
         logger.info(log_optimized)
 
         try:
@@ -607,9 +616,9 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
 
             unique_files = list(set([r.get('file', 'Unknown') for r in refs]))
             file_list = ", ".join([f.replace('.pdf', '')[:25] for f in unique_files[:5]])
-            log_hits = f"🔬 CONCEPTS_FOUND: {len(refs)} hits from {len(unique_files)} files: [{file_list}]"
+            log_hits = f"CONCEPTS_FOUND: {len(refs)} hits from {len(unique_files)} files: [{file_list}]"
             chunk_detail = "  ".join(f"[{r['id']}] {r.get('file','?').replace('.pdf','')[:20]} S.{r.get('page','?')}" for r in refs)
-            log_chunks = f"🔬 CONCEPTS_CHUNKS: {chunk_detail}"
+            log_chunks = f"CONCEPTS_CHUNKS: {chunk_detail}"
             logger.info(log_hits)
 
             return {
@@ -622,7 +631,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 "logs": extra_logs + [log_original, log_optimized, log_hits, log_chunks]
             }
         except Exception as e:
-            log = f"❌ SEARCH_CONCEPTS: Error - {str(e)}"
+            log = f"SEARCH_CONCEPTS: Error - {str(e)}"
             logger.info(log)
             return {
                 "documents": [],
@@ -651,7 +660,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
         reader_entities = state.get("entities") if intent == "COMPARE" else None
 
         if not context:
-            log = "❌ READER: No context available"
+            log = "READER: No context available"
             logger.info(log)
             return {
                 "facts": [],
@@ -659,9 +668,9 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 "logs": [log]
             }
 
-        log_input = f"📥 READER_INPUT: {len(context)} chars of context received"
+        log_input = f"READER_INPUT: {len(context)} chars of context received"
         if reader_question != question:
-            log_lang = f"🌐 READER_LANG: Translated to English for extraction: '{reader_question[:80]}...'"
+            log_lang = f"READER_LANG: Translated to English for extraction: '{reader_question[:80]}...'"
             logger.info(log_lang)
         else:
             log_lang = None
@@ -674,7 +683,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
 
         if len(context) <= MAP_REDUCE_THRESHOLD:
             # STUFFING MODE: single LLM call (original behavior)
-            log_mode = f"📋 READER_MODE: Stuffing ({len(context)} chars < {MAP_REDUCE_THRESHOLD} threshold)"
+            log_mode = f"READER_MODE: Stuffing ({len(context)} chars < {MAP_REDUCE_THRESHOLD} threshold)"
             logger.info(log_mode)
             try:
                 result = agent.extract_facts(reader_question, context, intent=intent, entities=reader_entities)
@@ -682,12 +691,12 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 facts = result.get("facts", [])
 
                 if status == "SUFFICIENT":
-                    log_status = f"✅ READER: Status=SUFFICIENT - {len(facts)} facts extracted"
+                    log_status = f"READER: Status=SUFFICIENT - {len(facts)} facts extracted"
                     logger.info(log_status)
                     facts_preview = []
                     for idx, f in enumerate(facts[:3], 1):
                         facts_preview.append(f"  {idx}. [{f.get('source_id', '?')}] {f.get('fact', '')[:80]}...")
-                    log_facts = "📊 FACTS_PREVIEW:\n" + "\n".join(facts_preview)
+                    log_facts = "FACTS_PREVIEW:\n" + "\n".join(facts_preview)
                     logger.info(log_facts)
                     return {
                         "facts": facts,
@@ -697,8 +706,8 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
 
                 elif status == "INSUFFICIENT" and retry_count < max_retries:
                     missing = result.get("missing_reason", "Unknown")
-                    log_status = f"⚠️ READER: Status=INSUFFICIENT - {missing}"
-                    log_action = f"🔄 READER: Triggering retry loop (count: {retry_count})"
+                    log_status = f"READER: Status=INSUFFICIENT - {missing}"
+                    log_action = f"READER: Triggering retry loop (count: {retry_count})"
                     logger.info(log_status)
                     logger.info(log_action)
                     return {
@@ -710,7 +719,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                     }
 
                 else:
-                    log_status = f"❗ READER: Status=INSUFFICIENT, but max retries ({retry_count}) reached."
+                    log_status = f"READER: Status=INSUFFICIENT, but max retries ({retry_count}) reached."
                     log_action = "Forcing BEST EFFORT extraction..."
                     logger.info(log_status)
                     logger.info(log_action)
@@ -729,7 +738,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                     }
 
             except Exception as e:
-                log = f"❌ READER: Error - {str(e)}"
+                log = f"READER: Error - {str(e)}"
                 logger.info(log)
                 return {"facts": [], "error_message": f"Reader error: {str(e)}", "logs": base_logs + [log]}
 
@@ -741,7 +750,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
             max_chars = 8000
             chunks = [context[i:i + max_chars].strip() for i in range(0, len(context), max_chars)]
 
-        log_mode = f"🗺️ READER_MODE: Map-Reduce ({len(context)} chars > {MAP_REDUCE_THRESHOLD} threshold) → {len(chunks)} chunks"
+        log_mode = f"READER_MODE: Map-Reduce ({len(context)} chars > {MAP_REDUCE_THRESHOLD} threshold) → {len(chunks)} chunks"
         logger.info(log_mode)
 
         all_facts = []
@@ -767,20 +776,20 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                             map_logs.append(f"  ✅ Chunk {chunk_idx + 1}: {len(facts)} facts")
                         else:
                             insufficient_count += 1
-                            map_logs.append(f"  ⚠️ Chunk {chunk_idx + 1}: no facts")
+                            map_logs.append(f"  Chunk {chunk_idx + 1}: no facts")
                     except Exception as e:
                         map_logs.append(f"  ❌ Chunk {chunk_idx + 1}: {str(e)[:60]}")
 
-            log_reduce = f"📊 READER_REDUCE: {len(all_facts)} facts from {len(chunks)} chunks ({insufficient_count} empty)"
+            log_reduce = f"READER_REDUCE: {len(all_facts)} facts from {len(chunks)} chunks ({insufficient_count} empty)"
             logger.info(log_reduce)
 
             if all_facts:
-                log_status = f"✅ READER: {len(all_facts)} facts extracted (Map-Reduce)"
+                log_status = f"READER: {len(all_facts)} facts extracted (Map-Reduce)"
                 logger.info(log_status)
                 facts_preview = []
                 for idx, f in enumerate(all_facts[:3], 1):
                     facts_preview.append(f"  {idx}. [{f.get('source_id', '?')}] {f.get('fact', '')[:80]}...")
-                log_facts = "📊 FACTS_PREVIEW:\n" + "\n".join(facts_preview)
+                log_facts = "FACTS_PREVIEW:\n" + "\n".join(facts_preview)
                 logger.info(log_facts)
                 return {
                     "facts": all_facts,
@@ -789,8 +798,8 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 }
 
             elif retry_count < max_retries:
-                log_status = f"⚠️ READER: No facts across {len(chunks)} chunks"
-                log_action = f"🔄 READER: Triggering retry (count: {retry_count})"
+                log_status = f"READER: No facts across {len(chunks)} chunks"
+                log_action = f"READER: Triggering retry (count: {retry_count})"
                 logger.info(log_status)
                 return {
                     "facts": [], "quality_score": 0.3, "needs_recursion": True,
@@ -799,7 +808,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 }
 
             else:
-                log_status = f"❗ READER: No facts, max retries ({retry_count}) reached → Best Effort"
+                log_status = f"READER: No facts, max retries ({retry_count}) reached → Best Effort"
                 logger.info(log_status)
                 all_facts = [{
                     "fact": "The context contained no direct matches for the specific question.",
@@ -813,7 +822,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 }
 
         except Exception as e:
-            log = f"❌ READER: Error - {str(e)}"
+            log = f"READER: Error - {str(e)}"
             logger.info(log)
             return {"facts": [], "error_message": f"Reader error: {str(e)}", "logs": base_logs + [log]}
 
@@ -825,14 +834,14 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
         error_message = state.get("error_message")
 
         if not facts:
-            log = "⚠️ WRITER: No facts available, generating fallback answer"
+            log = "WRITER: No facts available, generating fallback answer"
             logger.info(log)
             return {
                 "final_answer": "I'm sorry, I couldn't find any relevant information in the documents.",
                 "logs": [log]
             }
 
-        log_input = f"📥 WRITER_INPUT: {len(facts)} facts received (quality: {quality_score:.2f})"
+        log_input = f"WRITER_INPUT: {len(facts)} facts received (quality: {quality_score:.2f})"
         logger.info(log_input)
 
         facts_preview = []
@@ -841,7 +850,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
             source_id = f.get('source_id', '?')
             facts_preview.append(f"  [{source_id}] {fact_text}...")
 
-        log_facts_input = "📋 WRITER_SEES:\n" + "\n".join(facts_preview)
+        log_facts_input = "WRITER_SEES:\n" + "\n".join(facts_preview)
         if len(facts) > 4:
             log_facts_input += f"\n  ... and {len(facts) - 4} more facts"
         logger.info(log_facts_input)
@@ -853,7 +862,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
             extracted_facts = {"facts": facts}
             draft = agent.draft_answer(question, extracted_facts, target_language=target_language)
 
-            log_output = f"✍️ WRITER_OUTPUT: {len(draft)} chars generated"
+            log_output = f"WRITER_OUTPUT: {len(draft)} chars generated"
             logger.info(log_output)
 
             # === REFLECTION GATE ===
@@ -867,11 +876,11 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 should_reflect = False
 
             if not should_reflect:
-                log_skip = f"🔄 REFLECTION: Skipped (intent={intent}, quality={quality_score:.2f})"
+                log_skip = f"REFLECTION: Skipped (intent={intent}, quality={quality_score:.2f})"
                 logger.info(log_skip)
 
                 if error_message and quality_score < 0.6:
-                    draft = f"{draft}\n\n---\n⚠️ *{error_message}*"
+                    draft = f"{draft}\n\n---\n*{error_message}*"
 
                 return {
                     "draft_answer": draft,
@@ -881,7 +890,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
                 }
 
             # === CRITIC ===
-            log_critic_start = f"🔍 CRITIC: Fact-checking draft ({len(draft)} chars, {len(facts)} facts)..."
+            log_critic_start = f"CRITIC: Fact-checking draft ({len(draft)} chars, {len(facts)} facts)..."
             logger.info(log_critic_start)
 
             critic_result = agent.critique_draft(question, facts, draft, intent)
@@ -889,14 +898,14 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
             hallucination_count = len(critic_result.get("hallucinations", []))
             missing_count = len(critic_result.get("missing_facts", []))
 
-            log_critic = f"📋 CRITIC: verdict={verdict}, hallucinations={hallucination_count}, missing={missing_count}"
+            log_critic = f"CRITIC: verdict={verdict}, hallucinations={hallucination_count}, missing={missing_count}"
             logger.info(log_critic)
 
             critic_feedback_json = json.dumps(critic_result)
 
             if verdict == "PASS":
                 if error_message and quality_score < 0.6:
-                    draft = f"{draft}\n\n---\n⚠️ *{error_message}*"
+                    draft = f"{draft}\n\n---\n*{error_message}*"
 
                 return {
                     "draft_answer": draft,
@@ -908,18 +917,18 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
 
             # === REVISER (verdict == "REVISE") ===
             revision_instructions = critic_result.get("revision_instructions", "")
-            log_revise_start = "✏️ REVISER: Revising draft based on critic feedback..."
+            log_revise_start = "REVISER: Revising draft based on critic feedback..."
             logger.info(log_revise_start)
 
             revised = agent.revise_draft(
                 question, facts, draft, revision_instructions, target_language=target_language
             )
 
-            log_revise = f"✏️ REVISER: {len(draft)} → {len(revised)} chars"
+            log_revise = f"REVISER: {len(draft)} → {len(revised)} chars"
             logger.info(log_revise)
 
             if error_message and quality_score < 0.6:
-                revised = f"{revised}\n\n---\n⚠️ *{error_message}*"
+                revised = f"{revised}\n\n---\n*{error_message}*"
 
             return {
                 "draft_answer": draft,
@@ -930,7 +939,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
             }
 
         except Exception as e:
-            log = f"❌ WRITER: Error - {str(e)}"
+            log = f"WRITER: Error - {str(e)}"
             logger.info(log)
             return {
                 "final_answer": f"Error generating answer: {str(e)}",
@@ -949,7 +958,7 @@ def create_graph(retriever: Retriever, agent: AdvancedAgent, checkpointer=None) 
         max_messages = MAX_HISTORY_TURNS * 2
         history = history[-max_messages:]
 
-        log = f"💬 HISTORY: {len(history) // 2} turns stored (max {MAX_HISTORY_TURNS})"
+        log = f"HISTORY: {len(history) // 2} turns stored (max {MAX_HISTORY_TURNS})"
         logger.info(log)
 
         return {"chat_history": history, "logs": [log]}
@@ -1103,7 +1112,7 @@ def run_agent(
             "success": False,
             "final_answer": f"Execution error: {str(e)}",
             "references": [],
-            "logs": [f"❌ Graph error: {str(e)}"],
+            "logs": [f"Graph error: {str(e)}"],
             "error": str(e)
         }
 
@@ -1150,7 +1159,7 @@ def get_graph():  # type: ignore[return-value]
 
         graph = create_graph(_retriever_instance, _agent_instance)
 
-        logger.info("✅ Standalone graph loaded successfully!")
+        logger.info("Standalone graph loaded successfully.")
         return graph
 
     except Exception as e:
@@ -1165,7 +1174,7 @@ def get_graph():  # type: ignore[return-value]
 # ============================================================================
 
 if __name__ == "__main__":
-    logger.info("🧪 LangGraph Agent Test Mode\n")
+    logger.info("LangGraph Agent Test Mode\n")
 
     from llm_provider import get_llm_client
     from retriever import get_chroma_collection
