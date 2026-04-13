@@ -167,10 +167,14 @@ docuinsight-rag/
 │   ├── console_chat.py      # Terminal chat interface
 │   └── discovery.py         # Night Shift — autonomous batch analysis
 ├── tests/
+│   ├── test_unit.py         # Core logic unit tests
+│   ├── test_integration.py  # Router, guardrail, graph wiring
+│   ├── test_exports.py      # TXT/Word export, whitespace, renumbering
 │   ├── test_phase0.py       # Smoke tests (ingest + retrieval)
 │   ├── test_phase1.py       # Provider abstraction tests
 │   ├── test_phase2.py       # Domain data + ChromaDB tests
-│   └── test_phase3.py       # README quality + secrets scan
+│   ├── test_phase3.py       # README quality + secrets scan
+│   └── test_writer_language.py  # Cross-lingual output tests
 ├── scripts/
 │   └── generate_healthcare_pdfs.py  # Demo document generator
 ├── data/
