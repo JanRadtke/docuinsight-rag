@@ -11,6 +11,10 @@ from retriever import clean_filename
 
 INPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "input")
 
+# Pre-compiled regex for collapsing PDF extraction whitespace artifacts
+# (non-breaking spaces, em-spaces, tabs, etc.) while preserving newlines.
+_WS_RE = re.compile(r'[^\S\n]{2,}')
+
 
 def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> None:
     """Renders Glass Box Logs + Sources with Download Buttons."""
@@ -261,7 +265,7 @@ def render_search_result_extended(result: dict, dev_mode: bool, msg_id: str) -> 
 
                 c1, c2 = st.columns(2)
                 with c1:
-                    clean_text = re.sub(r'[^\S\n]{2,}', ' ', full_text)
+                    clean_text = _WS_RE.sub(' ', full_text)
                     txt_data = f"=== SOURCE [{r['display_id']}] ===\nFile: {r['file']}\nPage: {r['page']}\n\n{clean_text}"
                     st.download_button(
                         "Download TXT",
@@ -307,7 +311,7 @@ Type: {r.get('type', 'text')}
 Chars: {len(r.get('text', ''))}
 {'='*50}
 
-{re.sub(r'[^\S\n]{2,}', ' ', r.get('text', '[No Text]'))}
+{_WS_RE.sub(' ', r.get('text', '[No Text]'))}
 
 """
 
@@ -349,7 +353,7 @@ def render_evidence_list(refs: list, response: str, key_prefix: str) -> None:
 
             c1, c2 = st.columns(2)
             with c1:
-                clean_text = re.sub(r'[^\S\n]{2,}', ' ', full_text)
+                clean_text = _WS_RE.sub(' ', full_text)
                 txt_data = f"=== SOURCE [{r['id']}] ===\nFile: {r['file']}\nPage: {r['page']}\n\n{clean_text}"
                 st.download_button(
                     "Download TXT",
@@ -376,7 +380,7 @@ def render_evidence_list(refs: list, response: str, key_prefix: str) -> None:
     st.markdown("---")
     all_sources_txt = f"DOCUINSIGHT - ALL SOURCES\nTotal sources: {len(displayed_refs)}\n{'='*50}\n\n"
     for r in displayed_refs:
-        all_sources_txt += f"{'='*50}\nSOURCE [{r['id']}]\nFile: {r['file']}\nPage: {r['page']}\n{'='*50}\n\n{re.sub(r'[^\S\n]{2,}', ' ', r.get('text', '[No Text]'))}\n\n"
+        all_sources_txt += f"{'='*50}\nSOURCE [{r['id']}]\nFile: {r['file']}\nPage: {r['page']}\n{'='*50}\n\n{_WS_RE.sub(' ', r.get('text', '[No Text]'))}\n\n"
 
     st.download_button(
         f"Download All Sources as TXT ({len(displayed_refs)} sources)",
