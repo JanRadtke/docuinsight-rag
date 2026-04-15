@@ -262,7 +262,7 @@ Each version added one architectural improvement, measured on the same testsets:
 | v2 hybrid | 67.9 | 91.2 | + BM25 Hybrid Search + Entity-Aware Compare |
 | v3 cross-lingual | 68.6 | 81.9 | + Multilingual Query Expansion + Cross-Lingual RRF |
 | v4 cross-encoder | — | **90.0** | + Cross-Encoder Reranking (ms-marco-MiniLM) |
-| v5 reflection | pending | — | + Writer Reflection Loop (Draft + Critic + Revision) |
+| v5 reflection | **65.7** | **87.5** | + Writer Reflection Loop (Draft + Critic + Revision) |
 
 **Gap to Azure closed: 15.7 points (v1) down to 5.7 points (v3) — while running fully local with zero cloud costs.**
 
