@@ -251,12 +251,22 @@ to measure the impact of switching from Azure AI Search to local ChromaDB:
 | Well-defined research field | SEARCH | 60 | 40 |
 | **Average** | | **74.3** | **65.7** |
 
-**Key takeaway:** Azure AI Search's production-grade hybrid retrieval (BM25 with
-language analyzers + vector similarity) gives a ~9-point advantage on scientific
-papers. DocuInsight closes the gap with local BM25 (`rank_bm25` + Reciprocal Rank
-Fusion) and entity-aware document matching for COMPARE queries. The remaining gap
-comes from Azure's stemming and n-gram analysis vs simple whitespace tokenization.
-The trade-off is intentional: DocuInsight runs fully local with zero cloud dependencies.
+### Score Progression
+
+Each version added one architectural improvement, measured on the same testsets:
+
+| Version | Bio Score | Healthcare | Key Feature |
+|---------|-----------|------------|-------------|
+| BioInsight (Azure) | **74.3** | — | Reference baseline (Azure AI Search) |
+| v1 vector-only | 58.6 | 94.4 | ChromaDB + text-embedding-3-small |
+| v2 hybrid | 67.9 | 91.2 | + BM25 Hybrid Search + Entity-Aware Compare |
+| v3 cross-lingual | 68.6 | 81.9 | + Multilingual Query Expansion + Cross-Lingual RRF |
+| v4 cross-encoder | — | **90.0** | + Cross-Encoder Reranking (ms-marco-MiniLM) |
+| v5 reflection | pending | — | + Writer Reflection Loop (Draft + Critic + Revision) |
+
+**Gap to Azure closed: 15.7 points (v1) down to 5.7 points (v3) — while running fully local with zero cloud costs.**
+
+The trade-off is intentional: DocuInsight runs on ChromaDB + local BM25 with no cloud dependencies. Azure AI Search provides production-grade language analyzers and stemming that account for the remaining gap on scientific papers.
 
 ### Running tests
 
