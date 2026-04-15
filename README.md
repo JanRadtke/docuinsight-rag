@@ -266,7 +266,7 @@ Each version added one architectural improvement, measured on the same testsets:
 
 **Gap to Azure closed: 15.7 points (v1) down to 5.7 points (v3). Healthcare surpassed all prior versions at 93.1 — while running fully local with zero cloud costs.**
 
-The trade-off is intentional: DocuInsight runs on ChromaDB + local BM25 with no cloud dependencies. Azure AI Search provides production-grade language analyzers and stemming that account for the remaining gap on scientific papers.
+**Key insight from v5:** Post-retrieval features (Reflection Loop, Conversational Memory, NLTK BM25) pushed Healthcare to a new record but did not improve Bio. The bottleneck for scientific papers is retrieval quality, not answer generation — Quality Gate scores on Bio questions remain at 0.10–0.40, meaning the right chunks are never found. Next improvements must target the retrieval stage (e.g. section-aware chunking, query decomposition).
 
 ### Running tests
 
