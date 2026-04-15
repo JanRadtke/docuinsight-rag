@@ -231,8 +231,8 @@ The healthcare testset uses self-generated clinical documents (created via `scri
 
 | Testset | Domain | Docs | Model | Score |
 |---------|--------|------|-------|-------|
-| Healthcare | Clinical guidelines, therapy protocols | 10 single-page PDFs | gpt-4o-mini | **87.5 / 100** |
-| Hallmarks of Aging | Scientific review papers (10–30 pages) | 6 multi-page papers | gpt-4o-mini | **65.7 / 100** |
+| Healthcare | Clinical guidelines, therapy protocols | 10 single-page PDFs | gpt-4o-mini | **93.1 / 100** |
+| Hallmarks of Aging | Scientific review papers (10–30 pages) | 6 multi-page papers | gpt-4o-mini | **64.3 / 100** |
 
 ### Comparison: BioInsight (Azure) vs DocuInsight (ChromaDB)
 
@@ -259,12 +259,12 @@ Each version added one architectural improvement, measured on the same testsets:
 |---------|-----------|------------|-------------|
 | BioInsight (Azure) | **74.3** | — | Reference baseline (Azure AI Search) |
 | v1 vector-only | 58.6 | 94.4 | ChromaDB + text-embedding-3-small |
-| v2 hybrid | 67.9 | 91.2 | + BM25 Hybrid Search + Entity-Aware Compare |
+| v2 hybrid | 65.7 | 91.2 | + BM25 Hybrid Search + Entity-Aware Compare |
 | v3 cross-lingual | 68.6 | 81.9 | + Multilingual Query Expansion + Cross-Lingual RRF |
-| v4 cross-encoder | — | **90.0** | + Cross-Encoder Reranking (ms-marco-MiniLM) |
-| v5 reflection | **65.7** | **87.5** | + Writer Reflection Loop (Draft + Critic + Revision) |
+| v4 cross-encoder | 68.6 | **88.8** | + Cross-Encoder Reranking (ms-marco-MiniLM) |
+| v5 reflection | **64.3** | **93.1** | + Writer Reflection Loop (Draft + Critic + Revision) |
 
-**Gap to Azure closed: 15.7 points (v1) down to 5.7 points (v3) — while running fully local with zero cloud costs.**
+**Gap to Azure closed: 15.7 points (v1) down to 5.7 points (v3). Healthcare surpassed all prior versions at 93.1 — while running fully local with zero cloud costs.**
 
 The trade-off is intentional: DocuInsight runs on ChromaDB + local BM25 with no cloud dependencies. Azure AI Search provides production-grade language analyzers and stemming that account for the remaining gap on scientific papers.
 
