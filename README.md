@@ -264,9 +264,11 @@ Each version added one architectural improvement, measured on the same testsets:
 | v4 cross-encoder | 68.6 | **88.8** | + Cross-Encoder Reranking (ms-marco-MiniLM) |
 | v5 reflection | **64.3** | **93.1** | + Writer Reflection Loop (Draft + Critic + Revision) |
 
-**Gap to Azure closed: 15.7 points (v1) down to 5.7 points (v3). Healthcare surpassed all prior versions at 93.1 — while running fully local with zero cloud costs.**
+**Gap to Azure closed: 15.7 points (v1) down to 5.7 points (v3) — while running fully local with zero cloud costs.**
 
-**Key insight from v5:** Post-retrieval features (Reflection Loop, Conversational Memory, NLTK BM25) pushed Healthcare to a new record but did not improve Bio. The bottleneck for scientific papers is retrieval quality, not answer generation — Quality Gate scores on Bio questions remain at 0.10–0.40, meaning the right chunks are never found. Next improvements must target the retrieval stage (e.g. section-aware chunking, query decomposition).
+**Key insight from v5:** Post-retrieval features (Reflection Loop, Conversational Memory, NLTK BM25) improved Healthcare back to 93.1 but did not improve Bio. The bottleneck for scientific papers is retrieval quality, not answer generation — Quality Gate scores on Bio questions remain at 0.10–0.40, meaning the right chunks are never found. Next improvements must target the retrieval stage (e.g. section-aware chunking, query decomposition).
+
+Healthcare's v1 score of 94.4 came from vector-only retrieval on single-page PDFs where simple semantic matching was enough. Later versions traded a small amount of Healthcare score for major gains elsewhere (cross-lingual support, author-name matching, production-grade hybrid search) — architecture improvements that are essential for the harder scientific paper testset.
 
 ### Running tests
 

@@ -58,3 +58,10 @@ htmlcov/
 # LangGraph Local Dev
 .langgraph_api/
 .worktrees/
+
+# Feature kickoff files (dev-only, not for GitHub)
+features/
+
+# spec-kit artifacts (dev-only, not for GitHub)
+.specify/
+specs/
