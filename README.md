@@ -16,6 +16,8 @@
 
 ![Glass Box Developer Mode](docs/screenshot_glass_box.png)
 
+*The **Glass Box developer mode** exposes every stage of the pipeline in real time per query: guardrail decisions, retrieval strategy, quality scoring with reasoning, and source extraction.*
+
 ---
 
 ## Quick Start
@@ -70,8 +72,6 @@ flowchart TD
     I --> J[Verifier\ncitation plausibility check]
     J --> K([Final Answer + Sources])
 ```
-
-The screenshot at the top of this README shows the **Glass Box developer mode** in action — every stage of the pipeline above is exposed in real time per query: guardrail decisions, retrieval strategy, quality scoring with reasoning, and source extraction.
 
 ---
 
