@@ -9,12 +9,12 @@
 ![ChromaDB](https://img.shields.io/badge/ChromaDB-Vector_Store-green?style=flat-square)
 ![License](https://img.shields.io/badge/License-MIT-lightgrey?style=flat-square)
 
-![Glass Box Developer Mode](docs/screenshot_glass_box.png)
-
 **What it does:**
 - Ask questions across multiple PDFs — get cited, synthesised answers instead of summaries.
 - See exactly *how* the agent reasoned — Glass Box exposes retrieval, quality scoring, and verifier decisions per query.
 - Runs fully local (Ollama) or cloud-backed (OpenAI) — one env variable to switch.
+
+![Glass Box Developer Mode](docs/screenshot_glass_box.png)
 
 ---
 
