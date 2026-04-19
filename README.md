@@ -71,7 +71,7 @@ flowchart TD
     J --> K([Final Answer + Sources])
 ```
 
-The screenshot above shows the Glass Box developer mode, which exposes every stage of this pipeline in real time: guardrail decisions, retrieval strategy, quality scoring with reasoning, and source extraction — all visible per query.
+The screenshot at the top of this README shows the **Glass Box developer mode** in action — every stage of the pipeline above is exposed in real time per query: guardrail decisions, retrieval strategy, quality scoring with reasoning, and source extraction.
 
 ---
 
@@ -89,22 +89,26 @@ Off-the-shelf RAG platforms and frameworks solve retrieval out of the box — bu
 
 ## Key Features
 
-- **Hybrid retrieval (Vector + BM25)** — **Every query runs both ChromaDB vector similarity and BM25 keyword matching**; results are merged via Reciprocal Rank Fusion (RRF). This matches the hybrid search strategy of Azure AI Search, but runs fully local.
-- **Parallel dual-track retrieval** — Facts query and Concepts query run simultaneously via LangGraph's parallel node execution; results are merged before the Quality Gate.
+### Retrieval
+
+- **Hybrid retrieval (Vector + BM25)** — **Every query runs both ChromaDB vector similarity and BM25 keyword matching in parallel**; Facts and Concepts queries run on separate tracks via LangGraph's parallel node execution, and all results are merged via Reciprocal Rank Fusion (RRF) before the Quality Gate. This matches the hybrid search strategy of Azure AI Search, but runs fully local.
+- **Cross-lingual retrieval** — **Queries in German work against an English corpus.** The system detects query language, expands with translated synonyms, and merges results via cross-lingual RRF. The Writer responds in the query language regardless of document language.
 - **Parent-chunk expansion** — **Retrieval matches small chunks for precision, then loads the full parent page for context.** Deduplication ensures each parent page appears only once, even when multiple child chunks from the same page are matched.
+- **Cross-encoder reranking** — After hybrid retrieval, a cross-encoder model (`ms-marco-MiniLM`) re-scores the top candidates for semantic relevance. Improved Healthcare score by +8.1 points.
+
+### Quality & Self-Correction
+
+- **Quality Gate + self-correcting loop** — **An LLM scores the full retrieved context for relevance (0–100) before the Reader processes it.** If the score drops below 60, the agent rewrites the query and retries automatically (max 2 retries, configurable). Early versions only checked the first 2–3k characters — the current version evaluates the complete context to catch partial misses.
+- **Writer reflection loop** — **The Writer produces a draft, a Critic agent fact-checks it, and the Writer revises.** Reduces hallucinations by catching unsupported claims before the final answer.
 - **Hybrid Map-Reduce Reader** — **Small contexts use a single LLM call; large contexts are split and processed in parallel, then merged.** This prevents token-limit issues with long documents while preserving cross-document reasoning for shorter ones.
-- **Quality Gate** — **An LLM scores the full retrieved context for relevance (0–100) before the Reader processes it.** Early versions only checked the first 2–3k characters — the current version evaluates the complete context to catch partial misses.
-- **Self-correcting loop** — If the Quality Gate scores below 60, the agent rewrites the query and retries automatically (max 2 retries, configurable).
-- **LLM-as-Judge evaluation** — `evaluate.py` runs a testset against the live system and scores each answer using GPT-4o as an independent judge. Parallel `ThreadPoolExecutor` reduces eval time by ~75%.
 - **Entity-aware COMPARE** — **For comparison queries referencing authors by name, the system extracts entities via LLM and searches document first pages for matches** (word-boundary matching for short names), loading matched documents in full — compensating for pure vector search's weakness with proper nouns.
+- **Conversational memory** — **Follow-up questions like "Explain point 2 in more detail" work without repeating context.** LangGraph MemorySaver maintains conversation state per session, and the Planner rewrites follow-up queries into standalone search queries.
+
+### Operations & Observability
+
 - **Provider-agnostic LLM** — Switch between OpenAI API and local Ollama with a single env variable. No code changes required.
 - **Multimodal ingest** — `ingest.py` extracts text chunks and images from PDFs; diagrams are analysed with GPT-4o Vision and stored as text descriptions alongside regular chunks.
-- **Cross-lingual retrieval** — **Queries in German work against an English corpus.** The system detects query language, expands with translated synonyms, and merges results via cross-lingual RRF. The Writer responds in the query language regardless of document language.
-- **Writer reflection loop** — **The Writer produces a draft, a Critic agent fact-checks it, and the Writer revises.** Reduces hallucinations by catching unsupported claims before the final answer.
-- **Cross-encoder reranking** — After hybrid retrieval (BM25 + vector), a cross-encoder model (ms-marco-MiniLM) re-scores the top candidates for semantic relevance. Improved Healthcare score by +8.1 points.
-- **Conversational memory** — **Follow-up questions like "Explain point 2 in more detail" work without repeating context.** LangGraph MemorySaver maintains conversation state per session, and the Planner rewrites follow-up queries into standalone search queries.
-- **Glass Box developer mode** — Streamlit sidebar toggle exposes the full agent trace: query optimisation reasoning, retrieved chunks, quality scores, and verifier output.
-- **LangGraph Studio integration** — `langgraph dev` launches a visual graph debugger; step through nodes and inspect state at every edge.
+- **Glass Box developer mode + LangGraph Studio** — Streamlit sidebar toggle exposes the full agent trace (query optimisation reasoning, retrieved chunks, quality scores, verifier output), and `langgraph dev` launches a visual graph debugger for step-through inspection of every node and edge.
 
 ---
 
