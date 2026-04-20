@@ -261,7 +261,7 @@ docuinsight-rag/
 │   ├── evaluate.py          # LLM-as-Judge evaluation harness
 │   ├── app.py               # Streamlit UI with Glass Box mode
 │   ├── console_chat.py      # Terminal chat interface
-│   └── discovery.py         # Night Shift — autonomous batch analysis
+│   └── discovery.py         # Batch Discovery — autonomous document analysis
 ├── tests/
 │   ├── test_unit.py         # Core logic unit tests
 │   ├── test_integration.py  # Router, guardrail, graph wiring
